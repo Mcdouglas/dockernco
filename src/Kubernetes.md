@@ -14,15 +14,54 @@ Kubernetes est formé de multiples composants interagissant ensemble :
 ## Kubelet
 
 kubelet est un agent installé sur chaque machine hôte. Il est responsable
-du cycle de vie des conteneur qui lui sont attribué.
+du cycle de vie des conteneurs qui lui sont attribués.
 
+### Installation et lancement en mode `Standalone`
+
+Télécharger le binaire de `kubelet` :
 ```
 wget https://storage.googleapis.com/kubernetes-release/release/v1.7.6/bin/linux/amd64/kubelet
 chmod +x kubelet
 ```
-
+Lancer `kubelet` :
 ```
-sudo ./kubelet --pod-manifest-path=$PWD/manifests/ --root-dir=$PWD/root
+mkdir manifests
+sudo ./kubelet --pod-manifest-path $PWD/manifests
+```
+En fonctionnement normal `kubelet` a besoin de du composant `apiserver` pour obtenir 
+les informations sur les conteneurs à déployer. Il est possible de le lancer en mode 
+standalone, les descripteurs sont alors de simple fichiers locaux à la machine.
+
+Le option `--pod-manifest-path` permet d'indiquer un répertoire qui contient les
+descripteurs des conteneurs à lancer sur cette machine hôte.
+Le service semble devoir fonctionner avec les droits root, d'où l'invocation avec `sudo`.
+
+### Création de conteneurs
+
+En fait avec Kubernetes, l'unité de déploiement n'est pas le conteneur mais le [`Pod`](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/).
+Un Pod est un ensemble de conteneurs partageant les resources réseau et volume,
+mais, sauf dans cas exceptionnels, on ne mettra qu'un seul conteneur par Pod.
+
+Pour déployer un Pod, il faut le décrire dans un fichier YAML, puis placer le fichier
+dans le répertoire `$PWD/manifests`.
+
+Ecrire le fichier `nginx.yml` et le déplacer dans le répoire `manifests` :
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+```
+
+Constater que le conteneur a été créé :
+```
+docker ps
 ```
 
 ## Apiserver
